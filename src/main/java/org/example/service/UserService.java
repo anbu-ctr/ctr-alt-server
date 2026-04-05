@@ -4,7 +4,9 @@ import org.example.dto.SignInRequest;
 import org.example.dto.SignInResponse;
 import org.example.dto.SignUpRequest;
 import org.example.dto.UserDto;
+import org.example.entity.Organization;
 import org.example.entity.User;
+import org.example.repository.OrganizationRepository;
 import org.example.repository.UserRepository;
 import org.example.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private OrganizationRepository organizationRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -54,12 +59,21 @@ public class UserService {
         if (existingUser.isPresent()) {
             return new SignInResponse(false, "phoneNumber already registered");
         }
-        final User user = new User();
 
+        // Find or create organization
+        Organization organization = organizationRepository.findByOrgName(request.getOrgName())
+                .orElseGet(() -> {
+                    Organization newOrg = new Organization();
+                    newOrg.setOrgName(request.getOrgName());
+                    return organizationRepository.save(newOrg);
+                });
+
+        final User user = new User();
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
-        user.setOrgName(request.getOrgName());
+        user.setEmail(request.getEmail());
+        user.setOrganization(organization);
 
         final User savedUser = userRepository.save(user);
         final String token = jwtUtil.generateToken(savedUser.getPhoneNumber(), Long.valueOf(savedUser.getId()));
@@ -67,7 +81,9 @@ public class UserService {
                 savedUser.getId(),
                 savedUser.getPhoneNumber(),
                 savedUser.getCreatedAt().toString(),
-               savedUser.getName()
+                savedUser.getName(),
+                savedUser.getEmail(),
+                savedUser.getOrganization().getOrgName()
         );
 
         return new SignInResponse(true, "Sign up successful", token, userDTO);
@@ -93,14 +109,16 @@ public class UserService {
         final User user = userOptional.get();
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return new SignInResponse(false, "Invalid email or password");
+            return new SignInResponse(false, "Invalid phone/email or password");
         }
         final String token = jwtUtil.generateToken(user.getPhoneNumber(), Long.valueOf(user.getId()));
         final UserDto userDTO = new UserDto(
                 user.getId(),
                 user.getPhoneNumber(),
                 user.getCreatedAt().toString(),
-                user.getName()
+                user.getName(),
+                user.getEmail(),
+                user.getOrganization().getOrgName()
         );
 
         return new SignInResponse(true, "Sign in successful", token, userDTO);

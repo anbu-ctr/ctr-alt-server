@@ -5,6 +5,6 @@ import lombok.Data;
 // Request DTO
 @Data
 public class SignInRequest {
-    private String phoneNumber;
+    private String phoneNumber; // Can be phone number or email
     private String password;
 }

@@ -3,7 +3,6 @@ package org.example.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -39,15 +38,18 @@ public class Member {
 
     private String notes;
 
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_at", updatable = false)
+    private Long createdAt;
+    
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = System.currentTimeMillis();
     }
+    
     public enum Gender {
         MALE, FEMALE, OTHER
     }
+    
     public enum Plan {
         MONTHLY, QUARTERLY, HALF_YEARLY, YEARLY
     }

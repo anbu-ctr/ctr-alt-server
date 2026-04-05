@@ -51,14 +51,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             try {
-                final String phoneNumber = jwtUtil.extractPhoneNumber(token);
+                final String username = jwtUtil.extractUsername(token);
 
-                if (phoneNumber != null &&
+                if (username != null &&
                         SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                    if (jwtUtil.validateToken(token, phoneNumber)) {
+                    if (jwtUtil.validateToken(token, username)) {
                         final UserDetails userDetails =
-                                userDetailsService.loadUserByUsername(phoneNumber);
+                                userDetailsService.loadUserByUsername(username);
                         final UsernamePasswordAuthenticationToken authToken =
                                 new UsernamePasswordAuthenticationToken(
                                         userDetails, null, userDetails.getAuthorities());
