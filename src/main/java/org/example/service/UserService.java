@@ -1,5 +1,6 @@
 package org.example.service;
 
+import jakarta.transaction.Transactional;
 import org.example.dto.SignInRequest;
 import org.example.dto.SignInResponse;
 import org.example.dto.SignUpRequest;
@@ -17,6 +18,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class UserService {
 
     @Autowired

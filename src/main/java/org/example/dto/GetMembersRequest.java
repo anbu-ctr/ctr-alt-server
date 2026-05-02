@@ -1,10 +1,11 @@
 package org.example.dto;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class GetMembersRequest {
-    private String type;
+public class GetMembersRequest extends APIRequest {
     private MembersData data;
 
     @Data

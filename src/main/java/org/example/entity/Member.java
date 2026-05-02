@@ -19,6 +19,14 @@ public class Member {
     @Column(nullable = false)
     private String phoneNumber;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_member_user"))
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "org_id", foreignKey = @ForeignKey(name = "fk_member_organization"))
+    private Organization organization;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Gender gender;

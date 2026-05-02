@@ -18,6 +18,7 @@ public class ApiResponse {
 
         return response;
     }
+
     public static ApiResponse error(final String errorMessage) {
         final ApiResponse response = new ApiResponse();
 

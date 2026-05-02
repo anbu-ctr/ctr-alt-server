@@ -1,10 +1,11 @@
 package org.example.dto;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class GetPaymentsRequest {
-    private String type;
+public class GetPaymentsRequest extends APIRequest {
     private FilterData data;
 
     @Data

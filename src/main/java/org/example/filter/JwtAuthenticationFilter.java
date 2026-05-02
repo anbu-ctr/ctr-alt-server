@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -34,16 +38,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     final FilterChain filterChain)
             throws ServletException, IOException {
 
-       String token = null;
-       final String authHeader = request.getHeader("Authorization");
+        String token = null;
+        final String authHeader = request.getHeader("Authorization");
+        HttpServletRequest wrappedRequest = request;
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-        }
-
-        if (token == null && request.getCookies() != null) {
+        } else if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("jwt_token".equals(cookie.getName())) {
                     token = cookie.getValue();
+                    final String bearerToken = "Bearer " + token;
+                    wrappedRequest = new HttpServletRequestWrapper(request) {
+                        @Override
+                        public String getHeader(String name) {
+                            if ("Authorization".equalsIgnoreCase(name)) {
+                                return bearerToken;
+                            }
+                            return super.getHeader(name);
+                        }
+
+                        @Override
+                        public Enumeration<String> getHeaders(String name) {
+                            if ("Authorization".equalsIgnoreCase(name)) {
+                                return Collections.enumeration(Collections.singletonList(bearerToken));
+                            }
+                            return super.getHeaders(name);
+                        }
+
+                        @Override
+                        public Enumeration<String> getHeaderNames() {
+                            List<String> names = Collections.list(super.getHeaderNames());
+                            if (names.stream().noneMatch("Authorization"::equalsIgnoreCase)) {
+                                names.add("Authorization");
+                            }
+                            return Collections.enumeration(names);
+                        }
+                    };
                     break;
                 }
             }
@@ -51,7 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             try {
-                final String username = jwtUtil.extractUsername(token);
+                final String username = jwtUtil.extractPhoneNumber(token);
 
                 if (username != null &&
                         SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -64,15 +95,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                         userDetails, null, userDetails.getAuthorities());
 
                         authToken.setDetails(new WebAuthenticationDetailsSource()
-                                .buildDetails(request));
+                                .buildDetails(wrappedRequest));
 
                         SecurityContextHolder.getContext().setAuthentication(authToken);
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Invalid JWT token: " + e.getMessage());
+                e.printStackTrace();
+                // Log the exception for debugging purposes
+                logger.error("Cannot set user authentication: {}", e);
             }
         }
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(wrappedRequest, response);
     }
 }

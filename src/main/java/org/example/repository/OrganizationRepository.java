@@ -8,7 +8,9 @@ import java.util.Optional;
 
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Integer> {
+
     Optional<Organization> findByOrgName(String orgName);
+
     boolean existsByOrgName(String orgName);
 }
 

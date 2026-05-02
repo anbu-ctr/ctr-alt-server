@@ -41,11 +41,19 @@ public class JwtUtil {
     }
 
     public String extractPhoneNumber(final String token) {
-        return extractClaim(token, Claims::getSubject);
+        String subject = extractClaim(token, Claims::getSubject);
+        if (subject != null) {
+            return subject.replaceAll("[^0-9]", "");
+        }
+        return null;
     }
 
     public String extractUsername(final String token) {
-        return extractClaim(token, Claims::getSubject);
+        String subject = extractClaim(token, Claims::getSubject);
+        if (subject != null) {
+            return subject.replaceAll("[^0-9]", "");
+        }
+        return null;
     }
 
     public Long extractUserId(final String token) {

@@ -13,7 +13,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByPhoneNumber(String phoneNumber);
 
-
     @Query("SELECT m FROM Member m WHERE m.expiryDate >= :today")
     Page<Member> findActiveMembers(LocalDate today, Pageable pageable);
 

@@ -23,11 +23,19 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse> signUp(@RequestBody final SignUpRequest request) {
+    public ResponseEntity<ApiResponse> signUp(@RequestBody final SignUpRequest request, final HttpServletResponse
+            httpServletResponse) {
         try {
            final SignInResponse response = userService.signUp(request);
 
             if (response.isSuccess()) {
+                final Cookie cookie = new Cookie("jwt_token", response.getToken());
+                cookie.setHttpOnly(true);
+                cookie.setSecure(false);
+                cookie.setPath("/");
+                cookie.setMaxAge(7 * 24 * 60 * 60);
+                httpServletResponse.addCookie(cookie);
+
                final Map<String, String> data = new HashMap<>();
                 data.put("message", "Sign up successful");
 
@@ -48,6 +56,7 @@ public class AuthController {
             @RequestBody final SignInRequest request,
             final HttpServletResponse httpResponse) {
         try {
+            System.out.println("signin");
             final SignInResponse response = userService.signIn(request);
 
             if (response.isSuccess()) {
@@ -70,5 +79,20 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error(e.getMessage()));
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(final HttpServletResponse httpResponse) {
+        final Cookie cookie = new Cookie("jwt_token", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // This will cause the browser to delete the cookie
+        httpResponse.addCookie(cookie);
+
+        final Map<String, String> data = new HashMap<>();
+        data.put("message", "Logout successful");
+
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 }

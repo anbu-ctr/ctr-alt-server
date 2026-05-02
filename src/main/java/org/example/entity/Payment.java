@@ -23,7 +23,7 @@ public class Payment {
     private Double amount;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.ORDINAL)
     private PaymentMode paymentMode;
 
     @Column(nullable = false)
